@@ -1,11 +1,10 @@
 import Head from "next/head";
 
-import { api } from "~/utils/api";
+import { RouterOutputs, api } from "~/utils/api";
 import { useUser, SignInButton, SignOutButton } from "@clerk/nextjs";
 
 const CreatePostWizard = () => {
   const { user } = useUser();
-  console.log(user);
   if (!user) return null;
 
   return (
@@ -19,6 +18,27 @@ const CreatePostWizard = () => {
         placeholder="Type some emojis!"
         className="grow bg-transparent outline-none"
       />
+    </div>
+  );
+};
+
+type PostWithUser = RouterOutputs["post"]["getAll"][number];
+const PostView = (props: PostWithUser) => {
+  const { post, author } = props;
+
+  return (
+    <div key={post.id} className="flex gap-3 border-b border-slate-400 p-4">
+      <img
+        src={author.imageUrl}
+        alt="Profile image"
+        className="h-14 w-14 rounded-full"
+      />
+      <div className="flex flex-col">
+        <div className="slate-300 flex">
+          <span>{`@${author.username}`}</span>
+        </div>
+        <span>{post.content}</span>
+      </div>
     </div>
   );
 };
@@ -45,13 +65,12 @@ export default function Home() {
                 <SignInButton />
               </div>
             )}
+            {/* {!!user.isSignedIn && <SignOutButton />} */}
             {!!user.isSignedIn && <CreatePostWizard />}
           </div>
           <div className="flex flex-col">
-            {[...data, ...data]?.map(({ post, author }) => (
-              <div key={post.id} className="border-b border-slate-400 p-8">
-                {post.content}
-              </div>
+            {[...data, ...data]?.map((fullPost) => (
+              <PostView {...fullPost} key={fullPost.post.id} />
             ))}
           </div>
         </div>
