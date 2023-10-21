@@ -5,7 +5,7 @@ import { PageLayout } from "~/components/layout";
 import { PostView } from "~/components/postview";
 import { generateSsgHelper } from "~/server/helpers/ssgHelper";
 
-export default function SinglePostPage({ id }: { id: number }) {
+export default function SinglePostPage({ id }: { id: string }) {
   const { data } = api.post.getById.useQuery({ id });
 
   if (!data) return <div>404</div>;
