@@ -1,4 +1,3 @@
-import { User } from "@clerk/nextjs/dist/types/server";
 import { clerkClient } from "@clerk/nextjs";
 import { z } from "zod";
 
@@ -9,7 +8,7 @@ import { filterUserForClient } from "~/server/helpers/filterUserForClient";
 export const profileRouter = createTRPCRouter({
   getUserByUsernames: publicProcedure
     .input(z.object({ username: z.string() }))
-    .query(async ({ ctx, input }) => {
+    .query(async ({ input }) => {
       const [user] = await clerkClient.users.getUserList({
         username: [input.username],
       });
