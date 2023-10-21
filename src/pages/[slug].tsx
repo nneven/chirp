@@ -1,18 +1,17 @@
 import Head from "next/head";
 import { api } from "~/utils/api";
 
-export default function ProfilePage() {
-  const { data, isLoading } = api.profile.getUserByUsernames.useQuery({
-    username: "nneven",
+export default function ProfilePage({ username }: { username: string }) {
+  const { data } = api.profile.getUserByUsernames.useQuery({
+    username,
   });
 
-  if (isLoading) return <div>Loading...</div>;
   if (!data) return <div>404</div>;
 
   return (
     <>
       <Head>
-        <title>Profile</title>
+        <title>{data.username}</title>
       </Head>
       <main className="flex h-screen justify-center">
         <div>{data.username}</div>
@@ -45,6 +44,7 @@ export const getStaticProps: GetStaticProps = async (context) => {
   return {
     props: {
       trpcState: ssg.dehydrate(),
+      username,
     },
   };
 };
