@@ -1,5 +1,5 @@
-import { User } from "@clerk/nextjs/dist/types/server";
 import { clerkClient } from "@clerk/nextjs";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import {
@@ -7,11 +7,35 @@ import {
   privateProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import { TRPCError } from "@trpc/server";
 
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { filterUserForClient } from "~/server/helpers/filterUserForClient";
+import type { Post } from "@prisma/client";
+
+const addUserDataToPosts = async (posts: Post[]) => {
+  const users = (
+    await clerkClient.users.getUserList({
+      userId: posts.map((post) => post.authorId),
+      limit: 100,
+    })
+  ).map(filterUserForClient);
+
+  return posts.map((post) => {
+    const author = users.find((user) => user.id === post.authorId)!;
+
+    if (!author)
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Author not found",
+      });
+
+    return {
+      post,
+      author,
+    };
+  });
+};
 
 // Create a new ratelimiter, that allows 3 requests per 1 minute
 const ratelimit = new Ratelimit({
@@ -29,18 +53,23 @@ export const postRouter = createTRPCRouter({
       };
     }),
 
-  // create: publicProcedure
-  //   .input(z.object({ name: z.string().min(1) }))
-  //   .mutation(async ({ ctx, input }) => {
-  //     // simulate a slow db call
-  //     await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  //     return ctx.db.post.create({
-  //       data: {
-  //         name: input.name,
-  //       },
-  //     });
-  //   }),
+  getPostsByUserId: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+      }),
+    )
+    .query(({ ctx, input }) =>
+      ctx.db.post
+        .findMany({
+          where: {
+            authorId: input.userId,
+          },
+          take: 100,
+          orderBy: { createdAt: "desc" },
+        })
+        .then(addUserDataToPosts),
+    ),
 
   create: privateProcedure
     .input(
@@ -81,26 +110,6 @@ export const postRouter = createTRPCRouter({
       orderBy: { createdAt: "desc" },
     });
 
-    const users = (
-      await clerkClient.users.getUserList({
-        userId: posts.map((post) => post.authorId),
-        limit: 100,
-      })
-    ).map(filterUserForClient);
-
-    return posts.map((post) => {
-      const author = users.find((user) => user.id === post.authorId)!;
-
-      if (!author)
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Author not found",
-        });
-
-      return {
-        post,
-        author,
-      };
-    });
+    return addUserDataToPosts(posts);
   }),
 });
