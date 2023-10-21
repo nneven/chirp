@@ -20,7 +20,7 @@ export default function ProfilePage({ username }: { username: string }) {
           <Image
             src={data.imageUrl}
             alt={`${data.username}'s profile image}`}
-            className="absolute bottom-0 left-0 -mb-16 ml-4 rounded-full border-4 border-black"
+            className="absolute bottom-0 left-0 -mb-16 ml-4 rounded-full border-4 border-black bg-black"
             width={128}
             height={128}
           />
