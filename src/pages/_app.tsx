@@ -9,7 +9,7 @@ import { Toaster } from "react-hot-toast";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   return (
-    <ClerkProvider>
+    <ClerkProvider {...pageProps}>
       <Head>
         <title>Chirp</title>
         <meta name="description" content="💭" />
