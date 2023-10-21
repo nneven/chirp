@@ -1,13 +1,14 @@
 import Image from "next/image";
+import Link from "next/link";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import toast from "react-hot-toast";
-import Link from "next/link";
 
+import { useState } from "react";
 import { RouterOutputs, api } from "~/utils/api";
 import { useUser, SignInButton, SignOutButton } from "@clerk/nextjs";
 import { LoadingPage, LoadingSpinner } from "../components/loading";
-import { useState } from "react";
+import { PageLayout } from "~/components/layout";
 
 dayjs.extend(relativeTime);
 
@@ -133,19 +134,17 @@ export default function Home() {
   if (!userLoaded) return <div />;
 
   return (
-    <main className="flex h-screen justify-center">
-      <div className="h-full w-full border-x border-slate-400 md:max-w-2xl">
-        <div className="flex border-b border-slate-400 p-4">
-          {!isSignedIn && (
-            <div className="flex justify-center">
-              <SignInButton />
-            </div>
-          )}
-          {/* {!!user.isSignedIn && <SignOutButton />} */}
-          {!!isSignedIn && <CreatePostWizard />}
-        </div>
-        <Feed />
+    <PageLayout>
+      <div className="flex border-b border-slate-400 p-4">
+        {!isSignedIn && (
+          <div className="flex justify-center">
+            <SignInButton />
+          </div>
+        )}
+        {/* {!!user.isSignedIn && <SignOutButton />} */}
+        {!!isSignedIn && <CreatePostWizard />}
       </div>
-    </main>
+      <Feed />
+    </PageLayout>
   );
 }
