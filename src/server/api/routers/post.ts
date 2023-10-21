@@ -53,6 +53,38 @@ export const postRouter = createTRPCRouter({
       };
     }),
 
+  getLatest: publicProcedure.query(({ ctx }) => {
+    return ctx.db.post.findFirst({
+      orderBy: { createdAt: "desc" },
+    });
+  }),
+
+  getAll: publicProcedure.query(async ({ ctx }) => {
+    const posts = await ctx.db.post.findMany({
+      take: 100,
+      orderBy: { createdAt: "desc" },
+    });
+
+    return addUserDataToPosts(posts);
+  }),
+
+  getById: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const post = await ctx.db.post.findUnique({
+        where: {
+          id: +input.id,
+        },
+      });
+
+      if (!post) throw new TRPCError({ code: "NOT_FOUND" });
+      return (await addUserDataToPosts([post]))[0];
+    }),
+
   getPostsByUserId: publicProcedure
     .input(
       z.object({
@@ -97,19 +129,4 @@ export const postRouter = createTRPCRouter({
 
       return post;
     }),
-
-  getLatest: publicProcedure.query(({ ctx }) => {
-    return ctx.db.post.findFirst({
-      orderBy: { createdAt: "desc" },
-    });
-  }),
-
-  getAll: publicProcedure.query(async ({ ctx }) => {
-    const posts = await ctx.db.post.findMany({
-      take: 100,
-      orderBy: { createdAt: "desc" },
-    });
-
-    return addUserDataToPosts(posts);
-  }),
 });
